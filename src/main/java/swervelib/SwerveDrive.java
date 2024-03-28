@@ -453,7 +453,7 @@ public class SwerveDrive
               || Math.abs(velocity.vyMetersPerSecond) > HEADING_CORRECTION_DEADBAND))
       {
         velocity.omegaRadiansPerSecond =
-            swerveController.headingCalculate(Utilities.normalizeAngle(getYaw().getRadians()), lastHeadingRadians);
+            swerveController.headingCalculate(getOdometryHeading().getRadians(), lastHeadingRadians);
       } else
       {
         lastHeadingRadians = getOdometryHeading().getRadians();
