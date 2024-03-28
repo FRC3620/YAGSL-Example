@@ -27,6 +27,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+
+import org.usfirst.frc3620.misc.Utilities;
+
 import swervelib.encoders.CANCoderSwerve;
 import swervelib.imu.Pigeon2Swerve;
 import swervelib.imu.SwerveIMU;
@@ -450,10 +453,19 @@ public class SwerveDrive
               || Math.abs(velocity.vyMetersPerSecond) > HEADING_CORRECTION_DEADBAND))
       {
         velocity.omegaRadiansPerSecond =
-            swerveController.headingCalculate(getOdometryHeading().getRadians(), lastHeadingRadians);
+            swerveController.headingCalculate(Utilities.normalizeAngle(getYaw().getRadians()), lastHeadingRadians);
       } else
       {
         lastHeadingRadians = getOdometryHeading().getRadians();
+      }
+
+      if (SwerveDriveTelemetry.verbosity == TelemetryVerbosity.HIGH) {
+        SmartDashboard.putBoolean("SwerveDrive.headingCorrection", headingCorrection);
+        SmartDashboard.putNumber("SwerveDrive.commandedRadiansPerSecond", velocity.omegaRadiansPerSecond);
+        SmartDashboard.putNumber("SwerveDrive.lastHeadingRadians", lastHeadingRadians);
+        SmartDashboard.putNumber("SwerveDrive.lastHeadingDegrees", Units.radiansToDegrees(lastHeadingRadians));
+        SmartDashboard.putNumber("SwerveDrive.odometryHeadingDegrees", getOdometryHeading().getDegrees());
+        SmartDashboard.putNumber("SwerveDrive.imuHeading", Utilities.normalizeAngle(getYaw().getDegrees()));
       }
     }
 
@@ -879,6 +891,22 @@ public class SwerveDrive
 
     // Update kinematics because we are not using setModuleStates
     kinematics.toSwerveModuleStates(new ChassisSpeeds());
+  }
+
+  public void alignModules(double moduleHeading) {
+
+    for (SwerveModule swerveModule : swerveModules) {
+
+      SwerveModuleState desiredState = 
+        new SwerveModuleState(0,Rotation2d.fromDegrees(moduleHeading));
+
+      swerveModule.setDesiredState(desiredState, false, true);
+
+    }
+
+    // Update kinematics because we are not using setModuleStates
+    kinematics.toSwerveModuleStates(new ChassisSpeeds());
+
   }
 
   /**
